@@ -38,7 +38,7 @@ def fetch_twitter_reviews(product_name, count=5):
 
 # Example usage
 if __name__ == "__main__":
-    product = "iPhone 15"
+    product = "iPhone 14"
     reviews = fetch_twitter_reviews(product, count=5)  # Fetch only 5 reviews to optimize speed
     df = pd.DataFrame(reviews, columns=["review"])
     df["Sentiment"] = df["review"].apply(get_sentiment)
