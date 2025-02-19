@@ -1,30 +1,31 @@
 import praw
 import os
 from dotenv import load_dotenv
-import pandas as pd
 
-# Load API credentials
+# Load Reddit API credentials from environment variables
 load_dotenv()
 
-# Reddit API Authentication
+REDDIT_CLIENT_ID = os.getenv("REDDIT_CLIENT_ID")
+REDDIT_CLIENT_SECRET = os.getenv("REDDIT_CLIENT_SECRET")
+REDDIT_USER_AGENT = os.getenv("REDDIT_USER_AGENT")
+
+# Authenticate Reddit API using PRAW
 reddit = praw.Reddit(
-    client_id=os.getenv("REDDIT_CLIENT_ID"),
-    client_secret=os.getenv("REDDIT_CLIENT_SECRET"),
-    username=os.getenv("REDDIT_USERNAME"),
-    password=os.getenv("REDDIT_PASSWORD"),
-    user_agent=os.getenv("REDDIT_USER_AGENT")
+    client_id=REDDIT_CLIENT_ID,
+    client_secret=REDDIT_CLIENT_SECRET,
+    user_agent=REDDIT_USER_AGENT
 )
 
 def fetch_reddit_reviews(product_name, limit=10):
     """
-    Fetch Reddit comments about a product from relevant subreddits.
+    Fetches Reddit posts related to a product from r/reviews.
     
     Parameters:
-        product_name (str): The name of the product to search for.
-        limit (int): The number of comments to fetch.
-    
+        product_name (str): The product name to search for.
+        limit (int): The number of posts to fetch.
+
     Returns:
-        list: A list of extracted comments.
+        list: A list of review texts.
     """
     reviews = []
     subreddit_list = ["technology", "gadgets", "Smartphones", "reviews"]
@@ -45,6 +46,6 @@ def fetch_reddit_reviews(product_name, limit=10):
 # ✅ Example Usage
 if __name__ == "__main__":
     product = "iPhone 15"
-    reviews = fetch_twitter_reviews(product, count=5)  # Fetch only 5 reviews to optimize speed
+    reviews = fetch_reddit_reviews(product, limit=10)
     df = pd.DataFrame(reviews, columns=["review"])
     print(df.head())

@@ -1,42 +1,38 @@
 import streamlit as st
 import pandas as pd
 import matplotlib.pyplot as plt
-from scraper import fetch_reddit_reviews
+from scraper import fetch_reddit_reviews  # Import function to fetch Reddit reviews
 from sentiment_analysis import get_sentiment
 from preprocess import preprocess_text
 
-# Cache function to prevent multiple API calls
-@st.cache_data(ttl=600)  # Cache results for 10 minutes
-def get_reddit_reviews(product_name):
-    return fetch_reddit_reviews(product_name, limit=10)  # Fetch 10 comments
-
 # Streamlit UI
-st.title("Real-Time Sentiment Analysis for Customer Feedback (Reddit)")
+st.title("Real-Time Sentiment Analysis for Reddit Product Reviews")
 
-# Input for product name (Reddit reviews)
-reddit_product = st.text_input("Enter product name for Reddit reviews:")
+# Input field for product name
+product = st.text_input("Enter a product name to fetch Reddit reviews:")
 
-if reddit_product:
-    with st.spinner("Fetching Reddit comments... Please wait."):
-        reviews = get_reddit_reviews(reddit_product)  # Cached API request
+if product:
+    with st.spinner("Fetching Reddit reviews... Please wait."):
+        reviews = fetch_reddit_reviews(product, limit=10)  # Fetch reviews from Reddit
 
-    if not reviews or "No relevant comments found on Reddit." in reviews:
-        st.error("No relevant comments found. Try another product.")
+    if not reviews:
+        st.error("No reviews found for this product on Reddit.")
     else:
-        df_reddit = pd.DataFrame(reviews, columns=["review"])
-        df_reddit["cleaned_review"] = df_reddit["review"].apply(preprocess_text)
-        df_reddit["Sentiment"] = df_reddit["cleaned_review"].apply(get_sentiment)
+        # Convert reviews to DataFrame
+        df = pd.DataFrame(reviews, columns=["review"])
+        df["cleaned_review"] = df["review"].apply(preprocess_text)
+        df["Sentiment"] = df["cleaned_review"].apply(get_sentiment)
 
         st.write("Processed Reddit Reviews:")
-        st.dataframe(df_reddit.head(5))  # Show first 5 reviews
+        st.dataframe(df.head(5))  # Show first 5 reviews
 
-        sentiment_counts = df_reddit["Sentiment"].value_counts()
+        sentiment_counts = df["Sentiment"].value_counts()
 
         # Pie Chart
         st.subheader("Sentiment Distribution")
         fig, ax = plt.subplots()
         ax.pie(sentiment_counts.values, labels=sentiment_counts.index, autopct="%1.1f%%", colors=["green", "red", "blue"])
-        ax.set_title("Reddit Sentiment Distribution")
+        ax.set_title("Sentiment Distribution")
         st.pyplot(fig)
 
         # Bar Chart
