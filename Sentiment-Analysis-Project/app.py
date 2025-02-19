@@ -35,8 +35,8 @@ if uploaded_file:
     df['Sentiment'] = df['cleaned_review'].apply(get_sentiment)  # Now applying sentiment analysis correctly
 
     # Show Sample Data
-    st.write("Sample Processed Data:")
-    st.write(df.head())
+    st.write("Processed Data:")
+    st.dataframe(df)
 
     # Sentiment Count Visualization
     sentiment_counts = df['Sentiment'].value_counts()
