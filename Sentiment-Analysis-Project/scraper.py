@@ -1,45 +1,50 @@
-import tweepy
-import pandas as pd
+import praw
 import os
-import time
-from sentiment_analysis import get_sentiment
 from dotenv import load_dotenv
+import pandas as pd
 
+# Load API credentials
 load_dotenv()
 
-API_KEY = os.getenv("API_KEY")
-API_SECRET = os.getenv("API_SECRET")
-ACCESS_TOKEN = os.getenv("ACCESS_TOKEN")
-ACCESS_SECRET = os.getenv("ACCESS_SECRET")
-BEARER_TOKEN = os.getenv("BEARER_TOKEN")
+# Reddit API Authentication
+reddit = praw.Reddit(
+    client_id=os.getenv("REDDIT_CLIENT_ID"),
+    client_secret=os.getenv("REDDIT_CLIENT_SECRET"),
+    username=os.getenv("REDDIT_USERNAME"),
+    password=os.getenv("REDDIT_PASSWORD"),
+    user_agent=os.getenv("REDDIT_USER_AGENT")
+)
 
-client = tweepy.Client(bearer_token=BEARER_TOKEN)
-
-def fetch_twitter_reviews(product_name, count=5):
-    """Fetches recent tweets mentioning a product with optimized API usage."""
+def fetch_reddit_reviews(product_name, limit=10):
+    """
+    Fetch Reddit comments about a product from relevant subreddits.
     
-    query = f"{product_name} -is:retweet lang:en"
+    Parameters:
+        product_name (str): The name of the product to search for.
+        limit (int): The number of comments to fetch.
+    
+    Returns:
+        list: A list of extracted comments.
+    """
+    reviews = []
+    subreddit_list = ["technology", "gadgets", "Smartphones", "reviews"]
 
-    try:
-        response = client.search_recent_tweets(query=query, tweet_fields=["text"], max_results=count)
+    for subreddit in subreddit_list:
+        try:
+            for post in reddit.subreddit(subreddit).search(product_name, limit=5):
+                post.comments.replace_more(limit=0)  # Load all comments
+                for comment in post.comments.list()[:limit]:  # Get top comments
+                    reviews.append(comment.body)
+                if len(reviews) >= limit:
+                    return reviews[:limit]
+        except Exception as e:
+            return [f"Error fetching Reddit reviews: {e}"]
 
-        if response.data:
-            return [tweet.text for tweet in response.data]
-        else:
-            return ["No relevant tweets found."]
+    return reviews if reviews else ["No relevant comments found on Reddit."]
 
-    except tweepy.TooManyRequests:
-        print("Twitter API rate limit exceeded. Retrying in 30 seconds...")
-        time.sleep(30)  # Wait before retrying
-        return fetch_twitter_reviews(product_name, count)  # Retry the request
-
-    except tweepy.TweepyException as e:
-        return [f"Twitter API Error: {e}"]
-
-# Example usage
+# ✅ Example Usage
 if __name__ == "__main__":
     product = "iPhone 15"
-    reviews = fetch_twitter_reviews(product, count=5)  # Fetch only 5 reviews to optimize speed
+    reviews = fetch_reddit_reviews(product, limit=10)
     df = pd.DataFrame(reviews, columns=["review"])
-    df["Sentiment"] = df["review"].apply(get_sentiment)
     print(df.head())
