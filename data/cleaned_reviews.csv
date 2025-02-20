@@ -1,0 +1,4 @@
+review,cleaned_review,Sentiment
+"I absolutely love this product! It has changed my life.","i absolutely love this product it has changed my life",Positive
+"Worst purchase ever. The product broke within a week.","worst purchase ever the product broke within a week",Negative
+"It was okay, nothing spectacular but did the job.","it was okay nothing spectacular but did the job",Neutral
